@@ -1,4 +1,4 @@
-# Sistema de Almoxarifado - MVP Hacktown oi
+# Sistema de Almoxarifado - MVP Hacktown
 
 Bem-vindo ao repositório do **Sistema de Almoxarifado**, um MVP desenvolvido para o Hacktown. O objetivo deste projeto é modernizar, agilizar e rastrear o processo de estoque, retirada e reposição de materiais, eliminando gargalos através de um sistema web eficiente.
 

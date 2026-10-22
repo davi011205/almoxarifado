@@ -1,17 +1,23 @@
 import Botao from "../Botao";
 import "./ModalAlerta.css";
 
-interface ModalAlertaEstoqueProps {
+export interface ItemAlertaEstoque {
+  produto: string;
   quantidade: number;
   minimo: number;
+}
+
+interface ModalAlertaEstoqueProps {
+  itens: ItemAlertaEstoque[];
   onFechar: () => void;
 }
 
 export default function ModalAlertaEstoque({
-  quantidade,
-  minimo,
+  itens,
   onFechar,
 }: ModalAlertaEstoqueProps) {
+  if (itens.length === 0) return null;
+
   return (
     <div className="modal-overlay">
       <section
@@ -24,17 +30,27 @@ export default function ModalAlertaEstoque({
           !
         </div>
 
-        <h2 id="titulo-alerta-estoque">Estoque abaixo do mínimo</h2>
-
+        <h2 id="titulo-alerta-estoque">Atenção ao nível do estoque</h2>
         <p>
-          A movimentação foi registrada, mas este produto está com apenas{" "}
-          <strong>{quantidade} unidade(s)</strong> em estoque.
+          A movimentação foi registrada, mas os produtos abaixo estão no limite
+          ou abaixo do estoque mínimo configurado:
         </p>
 
+        <div className="alerta-estoque-lista">
+          {itens.map((item) => (
+            <div className="alerta-estoque-item" key={item.produto}>
+              <strong>{item.produto}</strong>
+              <span>
+                Saldo atual: {item.quantidade} unidade(s) · Mínimo: {item.minimo}
+              </span>
+            </div>
+          ))}
+        </div>
+
         <p>
-          A quantidade está abaixo do mínimo de{" "}
-          <strong>{minimo} unidade(s)</strong>. Verifique a necessidade de
-          reposição.
+          A nota de reposição é criada somente ao confirmar a movimentação final,
+          quando a retirada deixa produtos abaixo do mínimo. A área administrativa
+          também permite revisar e confirmar uma nota com todos os itens em falta.
         </p>
 
         <Botao onClick={onFechar} className="botao-largo">

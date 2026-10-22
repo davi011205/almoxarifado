@@ -14,7 +14,7 @@ export function registrarMovimento({
   const qtd = Number(quantidade);
 
   if (!id) {
-    throw new Error("Leia primeiro o QR Code do produto.");
+    throw new Error("Informe ou selecione um produto antes de continuar.");
   }
 
   if (!Number.isInteger(qtd) || qtd <= 0) {

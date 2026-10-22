@@ -238,6 +238,26 @@ button {
   width: 100%;
 }
 
+.opcoes-selecao {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.opcoes-selecao .botao {
+  margin-top: 0;
+  min-height: 48px;
+}
+
+.dica-campo {
+  margin-top: -8px;
+  margin-bottom: 18px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .item-estoque {
   display: flex;
   justify-content: space-between;
@@ -510,5 +530,303 @@ button {
 
   .nota-acoes {
     display: none !important;
+  }
+}
+/* Pesquisa e paginaÃ§Ã£o do depÃ³sito */
+.painel-consulta {
+  max-width: 760px;
+}
+
+.rotulo-pesquisa {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.resultado-pesquisa {
+  margin-top: -8px;
+}
+
+.detalhes-item-estoque {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.minimo-produto {
+  font-size: 12px;
+}
+
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 22px 0 6px;
+}
+
+.paginacao > span {
+  color: #475569;
+  font-size: 14px;
+  text-align: center;
+}
+
+.paginacao .botao {
+  margin-top: 0;
+  padding: 10px 14px;
+}
+
+.paginacao .botao:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ConfiguraÃ§Ã£o dos mÃ­nimos individuais */
+.campo-minimo {
+  min-width: 105px;
+  max-width: 140px;
+  margin: 0;
+}
+
+.mensagem-minimo {
+  min-width: 160px;
+  margin: 8px 0 0;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.somente-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* HistÃ³rico de notas de reposiÃ§Ã£o */
+.lista-notas-reposicao {
+  display: grid;
+  gap: 12px;
+}
+
+.nota-historico {
+  padding: 14px 16px;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.nota-historico summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.nota-historico summary > span:first-of-type {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.nota-historico-data {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.etiqueta-nota {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.etiqueta-nota-auto {
+  color: #075985;
+  background: #e0f2fe;
+}
+
+.etiqueta-nota-manual {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.nota-historico[open] summary {
+  margin-bottom: 8px;
+}
+
+.nota-preview {
+  scroll-margin-top: 12px;
+}
+
+@media (max-width: 520px) {
+  .nota-historico summary {
+    align-items: flex-start;
+  }
+
+  .nota-historico summary .etiqueta-nota {
+    white-space: nowrap;
+  }
+
+  .paginacao {
+    gap: 8px;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+}
+.modal-conteudo {
+  width: min(100%, 34rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-radius: 0.8rem;
+  background: var(--cor-superficie, #fff);
+  color: var(--cor-texto, #222);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
+}
+.modal-conteudo .formulario-admin { display: grid; gap: 1rem; }
+.modal-conteudo label { display: grid; gap: .35rem; }
+
+/* Carrinho de movimentaÃ§Ãµes (entrada/retirada em lote) */
+.carrinho-movimentacao {
+  max-width: 1000px;
+}
+
+.carrinho-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.carrinho-cabecalho h2 {
+  margin-top: 4px;
+}
+
+.carrinho-contador {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.campo-quantidade-carrinho {
+  width: 100px;
+  min-width: 85px;
+  margin: 0;
+  padding: 9px;
+}
+
+.carrinho-resumo {
+  padding: 14px 0 4px;
+}
+
+.carrinho-resumo p {
+  margin-bottom: 0;
+}
+
+.modal-revisao-carrinho,
+.modal-nota-confirmacao {
+  width: min(100%, 800px);
+}
+
+.modal-revisao-carrinho h2,
+.modal-nota-confirmacao h2 {
+  margin-top: 0;
+}
+
+.alerta-estoque-lista {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  text-align: left;
+}
+
+.alerta-estoque-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.alerta-estoque-item strong {
+  color: #991b1b;
+  overflow-wrap: anywhere;
+}
+
+.alerta-estoque-item span {
+  color: #7f1d1d;
+  font-size: 14px;
+}
+
+.config-whatsapp-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.config-whatsapp-form .campo {
+  margin-bottom: 0;
+}
+
+.config-whatsapp-form > button {
+  margin-bottom: 0;
+}
+
+.acoes-config-produto {
+  display: grid;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.acoes-config-produto .botao {
+  margin-top: 0;
+  padding: 9px 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .carrinho-cabecalho {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .config-whatsapp-form {
+    grid-template-columns: 1fr;
+  }
+
+  .config-whatsapp-form > button {
+    width: 100%;
+  }
+
+  .nota-acoes > .botao {
+    max-width: 100%;
   }
 }

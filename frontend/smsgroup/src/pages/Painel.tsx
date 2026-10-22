@@ -46,7 +46,7 @@ export default function Painel({
 
       <section className="introducao">
         <p className="destaque">ÁREA DO FUNCIONÁRIO</p>
-        <h1 className="titulo-boas-vindas">Bem-vindo, Davi!</h1>
+        <h1 className="titulo-boas-vindas">Bem-vindo, {funcionario.nome}!</h1>
         <p className="descricao">O que você deseja fazer hoje?</p>
       </section>
 

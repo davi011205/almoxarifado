@@ -1,0 +1,281 @@
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: Arial, sans-serif;
+  color: #183153;
+  background: #f1f5f9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.pagina {
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.pagina-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #102544, #1768ac);
+}
+
+.painel {
+  width: min(520px, calc(100% - 32px));
+  margin: 20px auto;
+  padding: 26px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px #17385b12;
+}
+
+.painel-login {
+  width: 100%;
+  max-width: 390px;
+  margin: 0;
+  padding: 32px;
+}
+
+.logo {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #1768ac;
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.descricao {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.marca {
+  color: #1768ac;
+  letter-spacing: 1px;
+}
+
+.subtitulo {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.header {
+  padding: 18px 6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.botao {
+  padding: 14px 20px;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.botao-primario {
+  background: #1768ac;
+  color: white;
+}
+
+.botao-primario:hover {
+  background: #12558e;
+}
+
+.botao-secundario {
+  padding: 12px 18px;
+  margin-top: 18px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #1768ac;
+}
+
+.botao-secundario:hover {
+  background: #f1f5f9;
+}
+
+.botao-largo {
+  width: 100%;
+}
+
+.grupo-campo {
+  margin-top: 18px;
+}
+
+.grupo-campo label {
+  display: block;
+}
+
+.campo {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin-top: 8px;
+  margin-bottom: 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  color: #183153;
+}
+
+.campo:focus {
+  outline: 2px solid #1768ac;
+  outline-offset: 1px;
+}
+
+.mensagem-erro,
+.mensagem-sucesso {
+  padding: 12px;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.mensagem-erro {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.mensagem-sucesso {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.introducao {
+  padding: 40px 6% 20px;
+}
+
+.destaque {
+  color: #1768ac;
+  font-weight: bold;
+}
+
+.titulo-boas-vindas {
+  font-size: clamp(28px, 5vw, 40px);
+}
+
+.grade-acoes {
+  padding: 20px 6% 50px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.cartao-acao {
+  padding: 26px;
+  text-align: left;
+  color: #183153;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+}
+
+.cartao-acao:hover {
+  border-color: #1768ac;
+  box-shadow: 0 8px 24px #17385b12;
+}
+
+.icone-acao {
+  font-size: 32px;
+  color: #1768ac;
+}
+
+.link-acao {
+  color: #1768ac;
+}
+
+.rodape {
+  padding: 24px 6%;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.resumo-produto {
+  padding: 14px;
+  margin: 20px 0;
+  background: #e8f2fc;
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+
+.codigo-produto {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.area-leitor {
+  width: 100%;
+}
+
+.item-estoque {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.item-estoque span {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.grupo-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.grupo-botoes .botao {
+  margin-top: 18px;
+}
+
+@media (max-width: 480px) {
+  .painel {
+    padding: 20px;
+  }
+
+  .header {
+    padding: 16px 5%;
+  }
+
+  .item-estoque {
+    align-items: flex-start;
+  }
+
+  .item-estoque span {
+    font-size: 14px;
+  }
+}

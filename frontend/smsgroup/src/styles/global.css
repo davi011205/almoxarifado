@@ -289,3 +289,226 @@ button {
     font-size: 14px;
   }
 }
+
+
+
+/* Página administrativa */
+.conteudo-administracao {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.cabecalho-admin,
+.titulo-estoque-baixo,
+.nota-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.cabecalho-admin {
+  margin-bottom: 28px;
+}
+
+.cabecalho-admin h1 {
+  margin: 4px 0 12px;
+}
+
+.secao-admin,
+.secao-estoque-baixo,
+.nota-reposicao {
+  margin-bottom: 28px;
+  padding: 24px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+}
+
+.secao-admin h2,
+.secao-estoque-baixo h2,
+.nota-reposicao h2 {
+  margin-top: 0;
+}
+
+.secao-estoque-baixo {
+  border: 1px solid #fecaca;
+  border-left: 6px solid #dc2626;
+  background: #fffafa;
+}
+
+.contador-estoque-baixo {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.estoque-baixo-valor {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.mensagem-sem-alertas {
+  padding: 14px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.formulario-admin {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.campo-login {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.campo-login input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.formulario-admin > button,
+.formulario-admin > .botao-largo {
+  align-self: end;
+}
+
+.tabela-responsiva {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tabela-admin {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  text-align: left;
+}
+
+.tabela-admin th,
+.tabela-admin td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.tabela-admin th {
+  background: #f3f4f6;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.etiqueta-entrada,
+.etiqueta-retirada {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.etiqueta-entrada {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.etiqueta-retirada {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.nota-reposicao {
+  border: 1px solid #d1d5db;
+}
+
+.nota-identificacao {
+  text-align: right;
+}
+
+.nota-rodape {
+  padding-top: 14px;
+  border-top: 1px solid #d1d5db;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.nota-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.secao-admin-acesso {
+    padding: 20px 6% 50px;
+    
+
+}
+
+@media (max-width: 760px) {
+  .conteudo-administracao {
+    padding: 14px;
+  }
+
+  .cabecalho-admin,
+  .titulo-estoque-baixo,
+  .nota-cabecalho {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .formulario-admin {
+    grid-template-columns: 1fr;
+  }
+
+  .nota-identificacao {
+    text-align: left;
+  }
+
+  .secao-admin,
+  .secao-estoque-baixo,
+  .nota-reposicao {
+    padding: 16px;
+  }
+}
+
+/* Ao imprimir, mostra apenas a nota de reposição. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .nota-reposicao,
+  .nota-reposicao * {
+    visibility: visible;
+  }
+
+  .nota-reposicao {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .nota-acoes {
+    display: none !important;
+  }
+}

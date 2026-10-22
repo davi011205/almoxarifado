@@ -1,65 +1,69 @@
-
-import { useState } from "react";
-import type { FormEvent } from "react";
-
-import CampoFormulario from "../components/ui/CampoFormulario";
+import { useState, type FormEvent } from "react";
 import Botao from "../components/ui/Botao";
-import { autenticar } from "../services/autenticacaoService";
+import { autenticarFuncionario } from "../services/autenticacaoService";
 import type { LoginProps } from "../types";
 
 export default function Login({ onEntrar }: LoginProps) {
-  const [codigo, setCodigo] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
 
-  function entrar(e: FormEvent<HTMLFormElement>) {
+  function fazerLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setErro("");
 
-    if (autenticar(codigo, senha)) {
-      setErro("");
-      onEntrar();
-    } else {
-      setErro("Código ou senha incorretos!");
+    const funcionario = autenticarFuncionario(usuario, senha);
+
+    if (!funcionario) {
+      setErro("Usuário ou senha inválidos.");
+      return;
     }
+
+    onEntrar(funcionario);
   }
 
   return (
-    <main className="pagina-login">
-      <form className="painel painel-login" onSubmit={entrar}>
-        <div className="logo">A</div>
+    <main className="pagina pagina-login">
+      <section className="painel painel-login">
         <h1>Almoxarifado</h1>
+        <p className="descricao">Entre com seu usuário e senha.</p>
 
-        <p className="descricao">
-          Acesse sua conta de funcionário.
-        </p>
+        <form onSubmit={fazerLogin}>
+          <div className="campo-login">
+            <label htmlFor="usuario">Usuário</label>
+            <input
+              id="usuario"
+              type="text"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+              autoComplete="username"
+              required
+            />
+          </div>
 
-        <CampoFormulario
-          id="codigo"
-          label="Código do funcionário"
-          value={codigo}
-          onChange={(e) => setCodigo(e.target.value)}
-          placeholder="Digite seu código"
-          autoComplete="username"
-          required
-        />
+          <div className="campo-login">
+            <label htmlFor="senha">Senha</label>
+            <input
+              id="senha"
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-        <CampoFormulario
-          id="senha"
-          label="Senha"
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          placeholder="Digite sua senha"
-          autoComplete="current-password"
-          required
-        />
+          {erro && (
+            <p className="mensagem-erro" role="alert">
+              {erro}
+            </p>
+          )}
 
-        {erro && <p className="mensagem-erro">{erro}</p>}
-
-        <Botao type="submit" className="botao-largo">
-          Entrar no sistema →
-        </Botao>
-      </form>
+          <Botao type="submit" className="botao-largo">
+            Entrar
+          </Botao>
+        </form>
+      </section>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 
 import Header from "../components/layout/Header/Header";
-import Rodape from "../components/layout/Rodape";
+import Footer from "../components/layout/Footer/Footer";
 import CartaoAcao from "../components/ui/CartaoAcao";
 import type { DestinoPainel, PainelProps } from "../types";
 
@@ -57,7 +57,7 @@ export default function Painel({
         ))}
       </section>
 
-      <Rodape />
+      <Footer />
     </main>
   );
 }

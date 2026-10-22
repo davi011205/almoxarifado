@@ -1,10 +1,10 @@
 
- function Rodape() {
+ function Footer() {
   return (
-    <footer className="rodape">
+    <footer className="footer">
       Almoxarifado · Painel do funcionário
     </footer>
   );
 }
 
-export default Rodape;
+export default Footer;

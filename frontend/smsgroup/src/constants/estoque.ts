@@ -1,0 +1,1 @@
+export const ESTOQUE_MINIMO = 10;

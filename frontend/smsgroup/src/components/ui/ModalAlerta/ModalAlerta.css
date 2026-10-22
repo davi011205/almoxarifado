@@ -1,0 +1,77 @@
+/* Fundo escurecido atrás do modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* Caixa do alerta */
+.modal-alerta-estoque {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px;
+
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+
+  text-align: center;
+  animation: aparecer-modal 0.2s ease-out;
+}
+
+.modal-alerta-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+
+  border-radius: 50%;
+  background-color: #fee2e2;
+  color: #dc2626;
+
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.modal-alerta-estoque h2 {
+  margin: 0 0 16px;
+  color: #b91c1c;
+  font-size: 22px;
+}
+
+.modal-alerta-estoque p {
+  margin: 0 0 14px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.modal-alerta-estoque strong {
+  color: #b91c1c;
+}
+
+.modal-alerta-estoque .botao-largo {
+  width: 100%;
+  margin-top: 10px;
+}
+
+@keyframes aparecer-modal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,57 +1,64 @@
 
-
 import { useCallback, useState } from "react";
+import type { FormEvent } from "react";
 import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
 import CampoFormulario from "../components/ui/CampoFormulario";
 import LeitorQR from "../components/ui/LeitorQR";
+import ModalAlertaEstoque from "../components/ui/ModalAlerta/ModalAlertaEstoque";
 import { registrarMovimento } from "../services/estoqueService";
-import type { FormEvent } from "react";
-
-import type {
-  MovimentacaoEstoqueProps
-} from "../types";
+import { ESTOQUE_MINIMO } from "../constants/estoque";
+import type { MovimentacaoEstoqueProps } from "../types";
 
 export default function MovimentacaoEstoque({
   operacao,
   estoque,
   onSair,
   onVoltar,
-  onAtualizarEstoque
+  onAtualizarEstoque,
 }: MovimentacaoEstoqueProps) {
   const [produtoQR, setProdutoQR] = useState("");
   const [quantidade, setQuantidade] = useState("1");
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("");
+  const [quantidadeAlerta, setQuantidadeAlerta] = useState<number | null > (null);
 
   const aoLer = useCallback((texto: string) => {
     setProdutoQR(texto);
     setMensagem("");
     setTipoMensagem("");
+    setQuantidadeAlerta(null);
   }, []);
 
   function confirmarMovimento(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
+      const produtoId = produtoQR.trim();
       const novoEstoque = registrarMovimento({
         estoque,
-        produtoId: produtoQR,
+        produtoId,
         quantidade,
-        operacao
+        operacao,
       });
 
       onAtualizarEstoque(novoEstoque);
 
-      const novoTotal = novoEstoque[produtoQR.trim()];
+      const novoTotal = novoEstoque[produtoId] ?? 0;
 
       setMensagem(
         `${operacao === "inserir" ? "Entrada" : "Saída"} registrada! ` +
-        `Produto ${produtoQR.trim()}: ${novoTotal} unidade(s) em estoque.`
+          `Produto ${produtoId}: ${novoTotal} unidade(s) em estoque.`
       );
 
       setTipoMensagem("sucesso");
-   
+
+      //modal
+      if (operacao === "retirar" && novoTotal < ESTOQUE_MINIMO) {
+        setQuantidadeAlerta(novoTotal);
+      } else {
+        setQuantidadeAlerta(null);
+      }
     } catch (e: unknown) {
       const mensagemErro = e instanceof Error
           ? e.message 
@@ -59,25 +66,31 @@ export default function MovimentacaoEstoque({
 
       setMensagem(mensagemErro);
       setTipoMensagem("erro");
+      setQuantidadeAlerta(null);
     }
 
   }
+
+  function lerOutroQRCode() {
+    setProdutoQR("");
+    setMensagem("");
+    setTipoMensagem("");
+    setQuantidade("1");
+    setQuantidadeAlerta(null);
+  }
+
+  const estoqueAtual = estoque[produtoQR.trim()] ?? 0;
 
   return (
     <main className="pagina">
       <Header onSair={onSair} />
 
       {!produtoQR ? (
-        <LeitorQR
-          aoLer={aoLer}
-          aoFechar={onVoltar}
-        />
+        <LeitorQR aoLer={aoLer} aoFechar={onVoltar} />
       ) : (
         <section className="painel">
           <h2>
-            {operacao === "inserir"
-              ? "Inserir produto"
-              : "Retirar produto"}
+            {operacao === "inserir" ? "Inserir produto" : "Retirar produto"}
           </h2>
 
           <p className="descricao">
@@ -89,7 +102,10 @@ export default function MovimentacaoEstoque({
             <p className="codigo-produto">{produtoQR}</p>
 
             <strong>Estoque atual:</strong>
-            <p>{estoque[produtoQR] || 0} unidade(s)</p>
+            <p className={estoqueAtual < ESTOQUE_MINIMO
+                        ? "quantidade-estoque baixa"
+                        : "quantidade-estoque"
+                    }>{estoqueAtual} unidade(s)</p>
           </div>
 
           <form onSubmit={confirmarMovimento}>
@@ -110,25 +126,20 @@ export default function MovimentacaoEstoque({
           </form>
 
           {mensagem && (
-            <p className={
-              tipoMensagem === "erro"
-                ? "mensagem-erro"
-                : "mensagem-sucesso"
-            }>
+            <p
+              role="status"
+              className={
+                tipoMensagem === "erro"
+                  ? "mensagem-erro"
+                  : "mensagem-sucesso"
+              }
+            >
               {mensagem}
             </p>
           )}
 
           <div className="grupo-botoes">
-            <Botao
-              variante="secundario"
-              onClick={() => {
-                setProdutoQR("");
-                setMensagem("");
-                setTipoMensagem("");
-                setQuantidade("1");
-              }}
-            >
+            <Botao variante="secundario" onClick={lerOutroQRCode}>
               Ler outro QR Code
             </Botao>
 
@@ -137,6 +148,14 @@ export default function MovimentacaoEstoque({
             </Botao>
           </div>
         </section>
+      )}
+
+      {quantidadeAlerta !== null && (
+        <ModalAlertaEstoque
+          quantidade={quantidadeAlerta}
+          minimo={ESTOQUE_MINIMO}
+          onFechar={() => setQuantidadeAlerta(null)}
+        />
       )}
     </main>
   );

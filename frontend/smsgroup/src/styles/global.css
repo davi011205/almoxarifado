@@ -214,7 +214,7 @@ button {
   color: #1768ac;
 }
 
-.rodape {
+.footer {
   padding: 24px 6%;
   border-top: 1px solid #e2e8f0;
   color: #64748b;
@@ -250,6 +250,16 @@ button {
 .item-estoque span {
   text-align: right;
   flex-shrink: 0;
+}
+
+.quantidade-estoque {
+  color: inherit;
+  font-weight: 600;
+}
+
+.quantidade-estoque.baixa {
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .grupo-botoes {

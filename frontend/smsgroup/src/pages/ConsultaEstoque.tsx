@@ -2,6 +2,7 @@
 import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
 import type { ConsultaEstoqueProps } from "../types";
+import { ESTOQUE_MINIMO } from "../constants/estoque";
 
 export default function ConsultaEstoque({
   estoque,
@@ -25,7 +26,12 @@ export default function ConsultaEstoque({
           produtos.map(([id, quantidade]) => (
             <div className="item-estoque" key={id}>
               <strong className="codigo-produto">{id}</strong>
-              <span>{quantidade} unidade(s)</span>
+              <span className={quantidade < ESTOQUE_MINIMO
+                        ? "quantidade-estoque baixa"
+                        : "quantidade-estoque"
+                    }>
+                {quantidade} unidade(s)
+              </span>
             </div>
           ))
         )}

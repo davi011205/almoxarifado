@@ -17,7 +17,7 @@ export default function LeitorQR({
   const processandoRef = useRef(false);
 
   useEffect(() => {
-    let scanner: any = null;
+    let scanner: unknown = null;
     let iniciado = false;
     let encerrando = false;
 

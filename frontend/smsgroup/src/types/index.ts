@@ -18,6 +18,21 @@ export interface RegistroMovimentacao {
   data: string;
 }
 
+
+export interface ItemReposicao {
+  produto: string;
+  quantidadeAtual: number;
+  quantidadeMinima: number;
+  quantidadeRepor: number;
+}
+
+export interface NotaReposicao {
+  referencia: string;
+  data: string;
+  itens: ItemReposicao[];
+  origem: "automatica" | "manual";
+}
+
 export interface AdministradorProps {
   estoque: Estoque;
   funcionario: Funcionario;

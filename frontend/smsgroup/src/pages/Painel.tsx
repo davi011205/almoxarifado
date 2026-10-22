@@ -3,6 +3,7 @@ import Header from "../components/layout/Header/Header";
 import Footer from "../components/layout/Footer/Footer";
 import CartaoAcao from "../components/ui/CartaoAcao";
 import type { DestinoPainel, PainelProps } from "../types";
+import Botao from "../components/ui/Botao";
 
 const acoes: {
   icone: string;
@@ -32,7 +33,9 @@ const acoes: {
 
 export default function Painel({
   onSair,
-  onNavegar
+  onNavegar,
+  funcionario,
+  onAbrirAdmin,
 }: PainelProps) {
   return (
     <main className="pagina">
@@ -47,6 +50,22 @@ export default function Painel({
         <p className="descricao">O que você deseja fazer hoje?</p>
       </section>
 
+
+       {funcionario.perfil === "administrador" && (
+        <section className="secao-admin-acesso">
+          {/* <h2>Administração</h2>
+
+          <p>
+            Cadastre funcionários, acompanhe movimentações e confira
+            os produtos que precisam de reposição.
+          </p> */}
+
+          <Botao onClick={onAbrirAdmin}>
+            Abrir área administrativa
+          </Botao>
+        </section>
+      )}
+      
       <section className="grade-acoes">
         {acoes.map((acao) => (
           <CartaoAcao

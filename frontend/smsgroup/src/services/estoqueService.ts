@@ -41,3 +41,21 @@ export function registrarMovimento({
     [id]: novoTotal
   };
 }
+
+const CHAVE_ESTOQUE = "almoxarifado.estoque";
+
+export function obterEstoqueSalvo(): Estoque {
+  const dados = localStorage.getItem(CHAVE_ESTOQUE);
+
+  if (!dados) return {};
+
+  try {
+    return JSON.parse(dados) as Estoque;
+  } catch {
+    return {};
+  }
+}
+
+export function salvarEstoqueSalvo(estoque: Estoque): void {
+  localStorage.setItem(CHAVE_ESTOQUE, JSON.stringify(estoque));
+}

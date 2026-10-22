@@ -1,3 +1,29 @@
+export type PerfilAcesso = "administrador" | "funcionario";
+
+export interface Funcionario {
+  id: string;
+  nome: string;
+  usuario: string;
+  senha: string;
+  perfil: PerfilAcesso;
+}
+
+export interface RegistroMovimentacao {
+  id: string;
+  produto: string;
+  quantidade: number;
+  operacao: OperacaoEstoque;
+  funcionarioId: string;
+  funcionarioNome: string;
+  data: string;
+}
+
+export interface AdministradorProps {
+  estoque: Estoque;
+  funcionario: Funcionario;
+  onSair: () => void;
+  onVoltar: () => void;
+}
 
 export type OperacaoEstoque = "inserir" | "retirar";
 
@@ -32,12 +58,14 @@ export interface CartaoAcaoProps {
 }
 
 export interface LoginProps {
-  onEntrar: () => void;
+  onEntrar: (funcionario: Funcionario) => void;
 }
 
 export interface PainelProps {
   onSair: () => void;
   onNavegar: (destino: DestinoPainel) => void;
+  funcionario: Funcionario;
+  onAbrirAdmin: () => void;
 }
 
 export interface MovimentacaoEstoqueProps {
@@ -46,6 +74,7 @@ export interface MovimentacaoEstoqueProps {
   onSair: () => void;
   onVoltar: () => void;
   onAtualizarEstoque: (estoque: Estoque) => void;
+  funcionario: Funcionario;
 }
 
 export interface ConsultaEstoqueProps {

@@ -1,4 +1,3 @@
-
 import { useState, type ReactNode } from "react";
 import {
   Routes,
@@ -11,43 +10,73 @@ import Login from "./pages/Login";
 import Painel from "./pages/Painel";
 import MovimentacaoEstoque from "./pages/MovimentacaoEstoque";
 import ConsultaEstoque from "./pages/ConsultaEstoque";
+import Administrador from "./pages/Administrador";
+
+import {
+  encerrarSessao,
+  iniciarSessao,
+  obterFuncionarioSessao,
+} from "./services/autenticacaoService";
+
+import {
+  obterEstoqueSalvo,
+  salvarEstoqueSalvo,
+} from "./services/estoqueService";
 
 import type {
-  Estoque,
   DestinoPainel,
+  Estoque,
+  Funcionario,
   OperacaoEstoque,
 } from "./types";
 
 interface RotaProtegidaProps {
-  autenticado: boolean;
+  funcionario: Funcionario | null;
+  apenasAdmin?: boolean;
   children: ReactNode;
 }
 
-function RotaProtegida({autenticado, children}: RotaProtegidaProps) {
-  if (!autenticado) {
+function RotaProtegida({
+  funcionario,
+  apenasAdmin = false,
+  children,
+}: RotaProtegidaProps) {
+  if (!funcionario) {
     return <Navigate to="/" replace />;
+  }
+
+  if (apenasAdmin && funcionario.perfil !== "administrador") {
+    return <Navigate to="/painel" replace />;
   }
 
   return <>{children}</>;
 }
 
 export default function App() {
-  const [autenticado, setAutenticado] = useState(
-    () => sessionStorage.getItem("autenticado") === "true"
-  );
-  const [estoque, setEstoque] = useState<Estoque>({});
   const navigate = useNavigate();
 
-  function entrar() {
-    sessionStorage.setItem("autenticado", "true");
-    setAutenticado(true);
-    navigate("/painel");
+  const [funcionarioAtual, setFuncionarioAtual] =
+    useState<Funcionario | null>(() => obterFuncionarioSessao());
+
+  const [estoque, setEstoque] = useState<Estoque>(
+    () => obterEstoqueSalvo()
+  );
+
+  function entrar(funcionario: Funcionario) {
+    iniciarSessao(funcionario);
+    setFuncionarioAtual(funcionario);
+    navigate("/painel", { replace: true });
   }
 
   function sair() {
-    sessionStorage.removeItem("autenticado");
-    setAutenticado(false);
+    encerrarSessao();
+    setFuncionarioAtual(null);
     navigate("/", { replace: true });
+  }
+
+  function atualizarEstoque(novoEstoque: Estoque) {
+    salvarEstoqueSalvo(novoEstoque);
+    setEstoque(novoEstoque);
   }
 
   function navegar(destino: DestinoPainel) {
@@ -61,14 +90,39 @@ export default function App() {
   }
 
   function renderizarMovimentacao(operacao: OperacaoEstoque) {
+    if (!funcionarioAtual) {
+      return <Navigate to="/" replace />;
+    }
+
     return (
-      <RotaProtegida autenticado={autenticado}>
+      <RotaProtegida funcionario={funcionarioAtual}>
         <MovimentacaoEstoque
           operacao={operacao}
           estoque={estoque}
+          funcionario={funcionarioAtual}
           onSair={sair}
           onVoltar={() => navigate("/painel")}
-          onAtualizarEstoque={setEstoque}
+          onAtualizarEstoque={atualizarEstoque}
+        />
+      </RotaProtegida>
+    );
+  }
+
+  function renderizarAdministrador() {
+    if (!funcionarioAtual) {
+      return <Navigate to="/" replace />;
+    }
+
+    return (
+      <RotaProtegida
+        funcionario={funcionarioAtual}
+        apenasAdmin
+      >
+        <Administrador
+          estoque={estoque}
+          funcionario={funcionarioAtual}
+          onSair={sair}
+          onVoltar={() => navigate("/painel")}
         />
       </RotaProtegida>
     );
@@ -79,7 +133,7 @@ export default function App() {
       <Route
         path="/"
         element={
-          autenticado ? (
+          funcionarioAtual ? (
             <Navigate to="/painel" replace />
           ) : (
             <Login onEntrar={entrar} />
@@ -90,8 +144,15 @@ export default function App() {
       <Route
         path="/painel"
         element={
-          <RotaProtegida autenticado={autenticado}>
-            <Painel onSair={sair} onNavegar={navegar} />
+          <RotaProtegida funcionario={funcionarioAtual}>
+            {funcionarioAtual && (
+              <Painel
+                onSair={sair}
+                onNavegar={navegar}
+                funcionario={funcionarioAtual}
+                onAbrirAdmin={() => navigate("/administrador")}
+              />
+            )}
           </RotaProtegida>
         }
       />
@@ -109,7 +170,7 @@ export default function App() {
       <Route
         path="/estoque/consultar"
         element={
-          <RotaProtegida autenticado={autenticado}>
+          <RotaProtegida funcionario={funcionarioAtual}>
             <ConsultaEstoque
               estoque={estoque}
               onSair={sair}
@@ -120,8 +181,18 @@ export default function App() {
       />
 
       <Route
+        path="/administrador"
+        element={renderizarAdministrador()}
+      />
+
+      <Route
         path="*"
-        element={<Navigate to={autenticado ? "/painel" : "/"} replace />}
+        element={
+          <Navigate
+            to={funcionarioAtual ? "/painel" : "/"}
+            replace
+          />
+        }
       />
     </Routes>
   );

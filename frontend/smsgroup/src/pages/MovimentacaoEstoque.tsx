@@ -9,10 +9,12 @@ import ModalAlertaEstoque from "../components/ui/ModalAlerta/ModalAlertaEstoque"
 import { registrarMovimento } from "../services/estoqueService";
 import { ESTOQUE_MINIMO } from "../constants/estoque";
 import type { MovimentacaoEstoqueProps } from "../types";
+import { salvarMovimentacao } from "../services/movimentacoesService";
 
 export default function MovimentacaoEstoque({
   operacao,
   estoque,
+  funcionario,
   onSair,
   onVoltar,
   onAtualizarEstoque,
@@ -42,9 +44,19 @@ export default function MovimentacaoEstoque({
         operacao,
       });
 
-      onAtualizarEstoque(novoEstoque);
-
       const novoTotal = novoEstoque[produtoId] ?? 0;
+      // Registra a movimentação e o funcionário responsável.
+      salvarMovimentacao({
+        produto: produtoId,
+        quantidade: Number(quantidade),
+        operacao,
+        funcionarioId: funcionario.id,
+        funcionarioNome: funcionario.nome,
+        data: new Date().toISOString(),
+      });
+
+      // Persiste o saldo atualizado.
+      onAtualizarEstoque(novoEstoque);
 
       setMensagem(
         `${operacao === "inserir" ? "Entrada" : "Saída"} registrada! ` +

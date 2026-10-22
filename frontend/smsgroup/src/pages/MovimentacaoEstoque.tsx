@@ -54,7 +54,7 @@ export default function MovimentacaoEstoque({
    
     } catch (e: unknown) {
       const mensagemErro = e instanceof Error
-          ? e.message
+          ? e.message 
           : "Ocorreu um erro inesperado ao registrar a movimentação.";
 
       setMensagem(mensagemErro);

@@ -116,3 +116,36 @@ export function obterFuncionarioSessao(): Funcionario | null {
 export function encerrarSessao(): void {
   sessionStorage.removeItem(CHAVE_SESSAO);
 }
+
+export function atualizarFuncionario(id: string, dados: { nome: string; usuario: string; senha?: string }): Funcionario {
+  const funcionarios = listarFuncionarios();
+  const atual = funcionarios.find((f) => f.id === id);
+
+  if (!atual || atual.perfil !== "funcionario") {
+    throw new Error("Funcionário não encontrado.");
+  }
+
+  const nome = dados.nome.trim();
+  const usuario = dados.usuario.trim();
+
+  if (!nome || !usuario) {
+    throw new Error("Nome e usuário são obrigatórios.");
+  }
+
+  if (funcionarios.some((f) => f.id !== id && f.usuario.toLowerCase() === usuario.toLowerCase())){
+    throw new Error("Este nome de usuário já está cadastrado.");
+  } 
+
+  const atualizado = { ...atual, nome, usuario, senha: dados.senha?.trim() ? dados.senha : atual.senha };
+  localStorage.setItem(CHAVE_FUNCIONARIOS, JSON.stringify(funcionarios.map((f) => f.id === id ? atualizado : f)));
+  return atualizado;
+}
+
+export function excluirFuncionario(id: string): void {
+  const funcionarios = listarFuncionarios();
+  const alvo = funcionarios.find((f) => f.id === id);
+  if (!alvo || alvo.perfil !== "funcionario") {
+    throw new Error("Funcionário não encontrado.");
+  }
+  localStorage.setItem(CHAVE_FUNCIONARIOS, JSON.stringify(funcionarios.filter((f) => f.id !== id)));
+}

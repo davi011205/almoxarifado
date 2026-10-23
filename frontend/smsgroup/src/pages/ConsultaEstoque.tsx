@@ -2,6 +2,8 @@ import { useState } from "react";
 import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
 import type { ConsultaEstoqueProps } from "../types";
+import { useCallback, useState } from "react";
+import LeitorQR from "../components/ui/LeitorQR";
 import { obterQuantidadeMinima } from "../services/reposicaoService";
 
 const ITENS_POR_PAGINA = 20;
@@ -13,6 +15,8 @@ export default function ConsultaEstoque({
 }: ConsultaEstoqueProps) {
   const [busca, setBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [lerQR, setLerQR] = useState(false);
+  const aoLerQR = useCallback((texto: string) => { setBusca(texto); setPaginaAtual(1); setLerQR(false); }, []);
 
   const termo = busca.trim().toLocaleLowerCase("pt-BR");
   const produtos = Object.entries(estoque)
@@ -40,6 +44,8 @@ export default function ConsultaEstoque({
         <p className="descricao">
           Pesquise pelo nome ou pelo conteúdo do QR Code do produto.
         </p>
+
+        {!lerQR ? <Botao type="button" onClick={() => setLerQR(true)}>Consultar por QR Code</Botao> : <LeitorQR aoLer={aoLerQR} aoFechar={() => setLerQR(false)} />}
 
         <label className="rotulo-pesquisa" htmlFor="pesquisa-produtos">
           Nome ou QR Code

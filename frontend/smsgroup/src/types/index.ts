@@ -18,11 +18,11 @@ export interface RegistroMovimentacao {
   data: string;
 }
 
-
 export interface ItemReposicao {
   produto: string;
   quantidadeAtual: number;
   quantidadeMinima: number;
+  quantidadeIdeal: number;
   quantidadeRepor: number;
 }
 

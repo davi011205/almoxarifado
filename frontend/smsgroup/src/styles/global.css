@@ -532,7 +532,7 @@ button {
     display: none !important;
   }
 }
-/* Pesquisa e paginaÃ§Ã£o do depÃ³sito */
+/* Pesquisa e paginação do depósito */
 .painel-consulta {
   max-width: 760px;
 }
@@ -583,7 +583,7 @@ button {
   cursor: not-allowed;
 }
 
-/* ConfiguraÃ§Ã£o dos mÃ­nimos individuais */
+/* Configuração dos mínimos individuais */
 .campo-minimo {
   min-width: 105px;
   max-width: 140px;
@@ -609,7 +609,7 @@ button {
   border: 0;
 }
 
-/* HistÃ³rico de notas de reposiÃ§Ã£o */
+/* Histórico de notas de reposição */
 .lista-notas-reposicao {
   display: grid;
   gap: 12px;

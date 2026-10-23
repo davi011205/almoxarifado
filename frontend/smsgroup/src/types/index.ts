@@ -1,10 +1,12 @@
+import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
+
 export type PerfilAcesso = "administrador" | "funcionario";
 
 export interface Funcionario {
   id: string;
   nome: string;
   usuario: string;
-  senha: string;
+  senha?: string;
   perfil: PerfilAcesso;
 }
 
@@ -16,7 +18,9 @@ export interface RegistroMovimentacao {
   funcionarioId: string;
   funcionarioNome: string;
   data: string;
+  projetoDestino?: string | null;
 }
+
 
 export interface ItemReposicao {
   produto: string;
@@ -54,13 +58,13 @@ export interface HeaderProps {
 }
 
 export interface BotaoProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
   variante?: "primario" | "secundario";
   className?: string;
 }
 
 export interface CampoFormularioProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
   label: string;
 }
@@ -73,7 +77,7 @@ export interface CartaoAcaoProps {
 }
 
 export interface LoginProps {
-  onEntrar: (funcionario: Funcionario) => void;
+  onEntrar: (funcionario: Funcionario) => Promise<void> | void;
 }
 
 export interface PainelProps {

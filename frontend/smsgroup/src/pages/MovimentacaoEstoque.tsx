@@ -4,17 +4,17 @@ import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
 import CampoFormulario from "../components/ui/CampoFormulario";
 import LeitorQR from "../components/ui/LeitorQR";
-import ModalAlertaEstoque, { type ItemAlertaEstoque } from "../components/ui/ModalAlerta/ModalAlertaEstoque";
-import { registrarMovimento } from "../services/estoqueService";
+import ModalAlertaEstoque, {
+  type ItemAlertaEstoque,
+} from "../components/ui/ModalAlerta/ModalAlertaEstoque";
+import { confirmarMovimentacoes } from "../services/estoqueService";
 import { ESTOQUE_MINIMO } from "../constants/estoque";
 import {
   abrirNotaNoWhatsApp,
   criarNotaReposicao,
-  obterQuantidadeIdeal,
   obterQuantidadeMinima,
 } from "../services/reposicaoService";
 import type { MovimentacaoEstoqueProps } from "../types";
-import { salvarMovimentacao } from "../services/movimentacoesService";
 
 type MetodoSelecao = "escolher" | "qr" | "nome";
 
@@ -55,11 +55,13 @@ export default function MovimentacaoEstoque({
   const [nomeDigitado, setNomeDigitado] = useState("");
   const [metodoSelecao, setMetodoSelecao] = useState<MetodoSelecao>("escolher");
   const [quantidade, setQuantidade] = useState("1");
+  const [projetoDestino, setProjetoDestino] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("");
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [revisaoAberta, setRevisaoAberta] = useState(false);
   const [itensAlerta, setItensAlerta] = useState<ItemAlertaEstoque[]>([]);
+  const [salvandoMovimentacao, setSalvandoMovimentacao] = useState(false);
 
   const selecionarProduto = useCallback(
     (texto: string) => {
@@ -179,47 +181,30 @@ export default function MovimentacaoEstoque({
     setRevisaoAberta(true);
   }
 
-  function confirmarMovimentacaoFinal() {
+  async function confirmarMovimentacaoFinal() {
+    if (salvandoMovimentacao) return;
+    if (operacao === "retirar" && !projetoDestino.trim()) {
+      setMensagem("Informe o projeto de destino antes de confirmar a retirada.");
+      setTipoMensagem("erro");
+      return;
+    }
+    setSalvandoMovimentacao(true);
     try {
-      // Calcula todo o novo estoque primeiro. Nenhuma alteração é persistida
-      // até validar todos os produtos do carrinho.
-      let novoEstoque = { ...estoque };
-      const alertas: ItemAlertaEstoque[] = [];
-
-      for (const item of carrinho) {
-        novoEstoque = registrarMovimento({
-          estoque: novoEstoque,
-          produtoId: item.produto,
-          quantidade: item.quantidade,
-          operacao,
-        });
-
-        if (operacao === "retirar") {
-          const quantidadeFinal = novoEstoque[item.produto] ?? 0;
-          const minimo = obterQuantidadeMinima(item.produto);
-          if (quantidadeFinal <= minimo) {
-            alertas.push({
-              produto: item.produto,
-              quantidade: quantidadeFinal,
-              minimo,
-            });
-          }
-        }
-      }
-
-      // Só após validar todos os itens atualizamos estoque e histórico.
+      // O backend é a fonte da verdade: valida o saldo mais recente no banco e
+      // grava todos os produtos do carrinho + histórico em uma transação única.
+      let alertas: ItemAlertaEstoque[] = [];
+      const resposta = await confirmarMovimentacoes({
+        operacao,
+        itens: carrinho.map((item) => ({ produto: item.produto, quantidade: item.quantidade })),
+        ...(operacao === "retirar" ? { projetoDestino: projetoDestino.trim() } : {}),
+      });
+      const novoEstoque = resposta.estoque;
       onAtualizarEstoque(novoEstoque);
-      const dataMovimento = new Date().toISOString();
-      for (const item of carrinho) {
-        salvarMovimentacao({
-          produto: item.produto,
-          quantidade: item.quantidade,
-          operacao,
-          funcionarioId: funcionario.id,
-          funcionarioNome: funcionario.nome,
-          data: dataMovimento,
-        });
-      }
+      alertas = operacao === "retirar"
+        ? resposta.produtosAbaixoDoMinimo
+            .filter((produto) => carrinho.some((item) => item.produto.toLocaleLowerCase("pt-BR") === produto.produto.toLocaleLowerCase("pt-BR")))
+            .map((produto) => ({ produto: produto.produto, quantidade: produto.quantidade, minimo: produto.quantidadeMinima }))
+        : [];
 
       const totalUnidades = carrinho.reduce((soma, item) => soma + item.quantidade, 0);
       let complementoNota = "";
@@ -227,33 +212,29 @@ export default function MovimentacaoEstoque({
       // A nota só é criada no clique de confirmação final. Caso uma retirada
       // deixe um dos produtos movimentados abaixo do mínimo, a nota inclui
       // todos os produtos que estão abaixo do mínimo no estoque atualizado.
-      const produtoRetiradoFicouAbaixo = operacao === "retirar" && carrinho.some((item) => {
-        const saldoFinal = novoEstoque[item.produto] ?? 0;
-        return saldoFinal < obterQuantidadeMinima(item.produto);
-      });
+      const produtoRetiradoFicouAbaixo = operacao === "retirar" &&
+        resposta.produtosAbaixoDoMinimo.some((produto) =>
+          carrinho.some((item) => item.produto.toLocaleLowerCase("pt-BR") === produto.produto.toLocaleLowerCase("pt-BR"))
+        );
 
       if (produtoRetiradoFicouAbaixo) {
-        const itensEmFalta = Object.entries(novoEstoque)
-          .map(([produto, quantidadeAtual]) => {
-            const quantidadeMinima = obterQuantidadeMinima(produto);
-            const quantidadeIdeal = obterQuantidadeIdeal(produto);
-            return {
-              produto,
-              quantidadeAtual,
-              quantidadeMinima,
-              quantidadeIdeal,
-              quantidadeRepor: Math.max(0, quantidadeIdeal - quantidadeAtual),
-            };
-          })
-          .filter((item) => item.quantidadeAtual < item.quantidadeMinima);
+        const itensEmFalta = resposta.produtosAbaixoDoMinimo.map((produto) => ({
+          produto: produto.produto,
+          quantidadeAtual: produto.quantidade,
+          quantidadeMinima: produto.quantidadeMinima,
+          quantidadeIdeal: produto.quantidadeIdeal,
+          quantidadeRepor: Math.max(0, produto.quantidadeIdeal - produto.quantidade),
+        }));
 
         if (itensEmFalta.length > 0) {
           try {
-            const nota = criarNotaReposicao(itensEmFalta, "automatica");
+            // A API recompõe a nota consultando novamente o banco. O cliente não decide
+            // os produtos, saldos nem limites que serão gravados no documento.
+            const nota = await criarNotaReposicao(itensEmFalta, "automatica");
             abrirNotaNoWhatsApp(nota);
             complementoNota = ` Foi gerada a nota ${nota.referencia} com todos os produtos abaixo do mínimo e o WhatsApp foi aberto para conferir o envio.`;
-          } catch {
-            complementoNota = " A movimentação foi registrada, mas não foi possível gerar a nota de reposição.";
+          } catch (e: unknown) {
+            complementoNota = ` A movimentação foi registrada, mas a nota não pôde ser gerada: ${e instanceof Error ? e.message : "erro inesperado"}`;
           }
         }
       }
@@ -269,6 +250,7 @@ export default function MovimentacaoEstoque({
       setNomeDigitado("");
       setMetodoSelecao("escolher");
       setQuantidade("1");
+      setProjetoDestino("");
       setRevisaoAberta(false);
       setItensAlerta(alertas);
     } catch (e: unknown) {
@@ -277,6 +259,8 @@ export default function MovimentacaoEstoque({
         : "Ocorreu um erro inesperado ao registrar a movimentação.";
       setMensagem(mensagemErro);
       setTipoMensagem("erro");
+    } finally {
+      setSalvandoMovimentacao(false);
     }
   }
 
@@ -477,6 +461,21 @@ export default function MovimentacaoEstoque({
             <span className="carrinho-contador">{carrinho.length} produto(s)</span>
           </div>
 
+          {operacao === "retirar" && (
+            <div className="campo-login campo-projeto-destino">
+              <label htmlFor="projeto-destino">Projeto de destino</label>
+              <input
+                id="projeto-destino"
+                className="campo"
+                value={projetoDestino}
+                onChange={(e) => setProjetoDestino(e.target.value)}
+                maxLength={200}
+                placeholder="Informe o projeto que receberá os materiais"
+                required
+              />
+            </div>
+          )}
+
           <div className="tabela-responsiva">
             <table className="tabela-admin">
               <thead>
@@ -551,10 +550,11 @@ export default function MovimentacaoEstoque({
               </table>
             </div>
             <p><strong>Responsável:</strong> {funcionario.nome}</p>
+            {operacao === "retirar" && <p><strong>Projeto de destino:</strong> {projetoDestino}</p>}
             <p className="descricao">Se a retirada deixar produtos abaixo do estoque mínimo, uma nota com todos os itens em falta será preparada somente após esta confirmação final.</p>
             <div className="nota-acoes">
-              <Botao type="button" onClick={confirmarMovimentacaoFinal}>
-                Confirmar {operacao === "inserir" ? "entrada" : "retirada"}
+              <Botao type="button" onClick={confirmarMovimentacaoFinal} disabled={salvandoMovimentacao}>
+                {salvandoMovimentacao ? "Registrando..." : `Confirmar ${operacao === "inserir" ? "entrada" : "retirada"}`}
               </Botao>
               <Botao type="button" variante="secundario" onClick={cancelarRevisao}>
                 Voltar e editar carrinho

@@ -1,151 +1,82 @@
 import type { Funcionario } from "../types";
+import {
+  apiRequest,
+  limparCredenciais,
+  obterFuncionarioSessaoSalvo,
+  salvarFuncionarioSessao,
+  salvarToken,
+} from "./api";
 
-const CHAVE_FUNCIONARIOS = "almoxarifado.funcionarios";
-const CHAVE_SESSAO = "almoxarifado.usuarioAtual";
-
-const administradorInicial: Funcionario = {
-  id: "admin-inicial",
-  nome: "Administrador",
-  usuario: "davi",
-  senha: "1234",
-  perfil: "administrador",
-};
-
-function gerarId(): string {
-  return globalThis.crypto?.randomUUID?.() ??
-    `func-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+interface LoginResponse {
+  token: string;
+  funcionario: Funcionario;
 }
 
-export function listarFuncionarios(): Funcionario[] {
-  const dados = localStorage.getItem(CHAVE_FUNCIONARIOS);
-
-  if (!dados) {
-    localStorage.setItem(
-      CHAVE_FUNCIONARIOS,
-      JSON.stringify([administradorInicial])
-    );
-
-    return [administradorInicial];
-  }
-
-  try {
-    const funcionarios = JSON.parse(dados) as Funcionario[];
-
-    if (!funcionarios.some((f) => f.perfil === "administrador")) {
-      funcionarios.unshift(administradorInicial);
-
-      localStorage.setItem(
-        CHAVE_FUNCIONARIOS,
-        JSON.stringify(funcionarios)
-      );
-    }
-
-    return funcionarios;
-  } catch {
-    localStorage.setItem(
-      CHAVE_FUNCIONARIOS,
-      JSON.stringify([administradorInicial])
-    );
-
-    return [administradorInicial];
-  }
-}
-
-export function autenticarFuncionario(
+export async function autenticarFuncionario(
   usuario: string,
   senha: string
-): Funcionario | null {
-  const funcionario = listarFuncionarios().find(
-    (f) =>
-      f.usuario.toLowerCase() === usuario.trim().toLowerCase() &&
-      f.senha === senha
-  );
+): Promise<Funcionario> {
+  const resultado = await apiRequest<LoginResponse>("/auth/login", {
+    method: "POST",
+    public: true,
+    body: JSON.stringify({ usuario: usuario.trim(), senha }),
+  });
 
-  return funcionario ?? null;
+  salvarToken(resultado.token);
+  salvarFuncionarioSessao(resultado.funcionario);
+  return resultado.funcionario;
 }
 
-export function cadastrarFuncionario(dados: {
+export async function validarSessao(): Promise<Funcionario> {
+  const funcionario = await apiRequest<Funcionario>("/auth/me");
+  salvarFuncionarioSessao(funcionario);
+  return funcionario;
+}
+
+export async function listarFuncionarios(): Promise<Funcionario[]> {
+  return apiRequest<Funcionario[]>("/funcionarios");
+}
+
+export async function cadastrarFuncionario(dados: {
   nome: string;
   usuario: string;
   senha: string;
-}): Funcionario {
-  const funcionarios = listarFuncionarios();
+}): Promise<Funcionario> {
+  return apiRequest<Funcionario>("/funcionarios", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  });
+}
 
-  const usuario = dados.usuario.trim();
-
-  if (!dados.nome.trim() || !usuario || !dados.senha) {
-    throw new Error("Preencha todos os campos.");
-  }
-
-  if (
-    funcionarios.some(
-      (f) => f.usuario.toLowerCase() === usuario.toLowerCase()
-    )
-  ) {
-    throw new Error("Este nome de usuário já está cadastrado.");
-  }
-
-  const novoFuncionario: Funcionario = {
-    id: gerarId(),
-    nome: dados.nome.trim(),
-    usuario,
-    senha: dados.senha,
-    perfil: "funcionario",
+export async function atualizarFuncionario(
+  id: string,
+  dados: { nome: string; usuario: string; senha?: string }
+): Promise<Funcionario> {
+  const corpo = {
+    nome: dados.nome,
+    usuario: dados.usuario,
+    ...(dados.senha?.trim() ? { senha: dados.senha } : {}),
   };
+  return apiRequest<Funcionario>(`/funcionarios/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(corpo),
+  });
+}
 
-  localStorage.setItem(
-    CHAVE_FUNCIONARIOS,
-    JSON.stringify([...funcionarios, novoFuncionario])
-  );
-
-  return novoFuncionario;
+export async function excluirFuncionario(id: string): Promise<void> {
+  return apiRequest<void>(`/funcionarios/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
 }
 
 export function iniciarSessao(funcionario: Funcionario): void {
-  sessionStorage.setItem(CHAVE_SESSAO, funcionario.id);
+  salvarFuncionarioSessao(funcionario);
 }
 
 export function obterFuncionarioSessao(): Funcionario | null {
-  const id = sessionStorage.getItem(CHAVE_SESSAO);
-
-  if (!id) return null;
-
-  return listarFuncionarios().find((f) => f.id === id) ?? null;
+  return obterFuncionarioSessaoSalvo<Funcionario>();
 }
 
 export function encerrarSessao(): void {
-  sessionStorage.removeItem(CHAVE_SESSAO);
-}
-
-export function atualizarFuncionario(id: string, dados: { nome: string; usuario: string; senha?: string }): Funcionario {
-  const funcionarios = listarFuncionarios();
-  const atual = funcionarios.find((f) => f.id === id);
-
-  if (!atual || atual.perfil !== "funcionario") {
-    throw new Error("Funcionário não encontrado.");
-  }
-
-  const nome = dados.nome.trim();
-  const usuario = dados.usuario.trim();
-
-  if (!nome || !usuario) {
-    throw new Error("Nome e usuário são obrigatórios.");
-  }
-
-  if (funcionarios.some((f) => f.id !== id && f.usuario.toLowerCase() === usuario.toLowerCase())){
-    throw new Error("Este nome de usuário já está cadastrado.");
-  } 
-
-  const atualizado = { ...atual, nome, usuario, senha: dados.senha?.trim() ? dados.senha : atual.senha };
-  localStorage.setItem(CHAVE_FUNCIONARIOS, JSON.stringify(funcionarios.map((f) => f.id === id ? atualizado : f)));
-  return atualizado;
-}
-
-export function excluirFuncionario(id: string): void {
-  const funcionarios = listarFuncionarios();
-  const alvo = funcionarios.find((f) => f.id === id);
-  if (!alvo || alvo.perfil !== "funcionario") {
-    throw new Error("Funcionário não encontrado.");
-  }
-  localStorage.setItem(CHAVE_FUNCIONARIOS, JSON.stringify(funcionarios.filter((f) => f.id !== id)));
+  limparCredenciais();
 }

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
@@ -12,6 +12,7 @@ import {
 import { listarMovimentacoes } from "../services/movimentacoesService";
 import {
   abrirNotaNoWhatsApp,
+  carregarConfiguracoesReposicao,
   baixarNotaReposicao,
   criarNotaReposicao,
   listarNotasReposicao,
@@ -39,10 +40,8 @@ export default function Administrador({
   onSair,
   onVoltar,
 }: AdministradorProps) {
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>(
-    () => listarFuncionarios().filter((f) => f.perfil === "funcionario")
-  );
-  const [movimentacoes] = useState<RegistroMovimentacao[]>(() => listarMovimentacoes());
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [movimentacoes, setMovimentacoes] = useState<RegistroMovimentacao[]>([]);
   const [quantidadesMinimas, setQuantidadesMinimas] = useState<Record<string, number>>(
     () => listarQuantidadesMinimas()
   );
@@ -66,9 +65,7 @@ export default function Administrador({
   const [feedbackWhatsApp, setFeedbackWhatsApp] = useState("");
   const [erroWhatsApp, setErroWhatsApp] = useState("");
 
-  const [notasReposicao, setNotasReposicao] = useState<NotaReposicao[]>(
-    () => listarNotasReposicao()
-  );
+  const [notasReposicao, setNotasReposicao] = useState<NotaReposicao[]>([]);
   const [paginaNotas, setPaginaNotas] = useState(1);
   const [notaGerada, setNotaGerada] = useState<NotaReposicao | null>(null);
   const [itensNotaPendente, setItensNotaPendente] = useState<ItemReposicao[] | null>(null);
@@ -86,6 +83,34 @@ export default function Administrador({
   const [senha, setSenha] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
+  const [versaoCargaDados, setVersaoCargaDados] = useState(0);
+
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregarDadosAdministrativos() {
+      try {
+        const [listaFuncionarios, listaMovimentacoesAtual, configuracao, listaNotas] = await Promise.all([
+          listarFuncionarios(),
+          listarMovimentacoes(),
+          carregarConfiguracoesReposicao(),
+          listarNotasReposicao(),
+        ]);
+        if (!ativo) return;
+        setFuncionarios(listaFuncionarios.filter((f) => f.perfil === "funcionario"));
+        setMovimentacoes(listaMovimentacoesAtual);
+        setQuantidadesMinimas(configuracao.quantidadesMinimas);
+        setQuantidadesIdeais(configuracao.quantidadesIdeais);
+        setWhatsApp(configuracao.whatsapp);
+        setNotasReposicao(listaNotas);
+      } catch (e: unknown) {
+        if (ativo) setErro(e instanceof Error ? e.message : "Não foi possível carregar os dados administrativos.");
+      }
+    }
+
+    void carregarDadosAdministrativos();
+    return () => { ativo = false; };
+  }, [versaoCargaDados]);
 
   const produtosOrdenados = Object.entries(estoque)
     .filter(([produto]) =>
@@ -115,14 +140,14 @@ export default function Administrador({
     paginaNotasValida * NOTAS_POR_PAGINA
   );
 
-  function fazerCadastro(e: FormEvent<HTMLFormElement>) {
+  async function fazerCadastro(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro("");
     setMensagem("");
 
     try {
-      cadastrarFuncionario({ nome, usuario, senha });
-      setFuncionarios(listarFuncionarios().filter((f) => f.perfil === "funcionario"));
+      await cadastrarFuncionario({ nome, usuario, senha });
+      setFuncionarios((await listarFuncionarios()).filter((f) => f.perfil === "funcionario"));
       setNome("");
       setUsuario("");
       setSenha("");
@@ -132,7 +157,7 @@ export default function Administrador({
     }
   }
 
-  function salvarMinimoProduto(produto: string) {
+  async function salvarMinimoProduto(produto: string) {
     const texto = minimosEditados[produto] ?? String(quantidadesMinimas[produto] ?? ESTOQUE_MINIMO);
     const minimo = Number(texto);
 
@@ -142,7 +167,7 @@ export default function Administrador({
     }
 
     try {
-      const atualizados = salvarQuantidadeMinima(produto, minimo);
+      const atualizados = await salvarQuantidadeMinima(produto, minimo);
       setQuantidadesMinimas(atualizados);
       setMinimosEditados((atuais) => ({ ...atuais, [produto]: String(minimo) }));
       setFeedbackMinimo({ produto, mensagem: `Estoque mínimo definido como ${minimo}.`, erro: false });
@@ -155,7 +180,7 @@ export default function Administrador({
     }
   }
 
-  function salvarIdealProduto(produto: string) {
+  async function salvarIdealProduto(produto: string) {
     const texto = ideaisEditados[produto] ?? String(quantidadesIdeais[produto] ?? QUANTIDADE_IDEAL_PADRAO);
     const ideal = Number(texto);
 
@@ -165,7 +190,7 @@ export default function Administrador({
     }
 
     try {
-      const atualizados = salvarQuantidadeIdeal(produto, ideal);
+      const atualizados = await salvarQuantidadeIdeal(produto, ideal);
       setQuantidadesIdeais(atualizados);
       setIdeaisEditados((atuais) => ({ ...atuais, [produto]: String(ideal) }));
       setFeedbackIdeal({ produto, mensagem: `Quantidade ideal definida como ${ideal}.`, erro: false });
@@ -178,13 +203,13 @@ export default function Administrador({
     }
   }
 
-  function salvarTelefoneWhatsApp(e: FormEvent<HTMLFormElement>) {
+  async function salvarTelefoneWhatsApp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFeedbackWhatsApp("");
     setErroWhatsApp("");
 
     try {
-      const salvo = salvarWhatsAppReposicao(whatsApp);
+      const salvo = await salvarWhatsAppReposicao(whatsApp);
       setWhatsApp(salvo);
       setFeedbackWhatsApp("Número de WhatsApp salvo. As próximas notas usarão este destinatário.");
     } catch (e: unknown) {
@@ -202,12 +227,12 @@ export default function Administrador({
     setItensNotaPendente(produtosEmFalta.map((item) => ({ ...item })));
   }
 
-  function confirmarGeracaoNota() {
+  async function confirmarGeracaoNota() {
     if (!itensNotaPendente?.length) return;
 
     try {
-      const nota = criarNotaReposicao(itensNotaPendente, "manual");
-      setNotasReposicao(listarNotasReposicao());
+      const nota = await criarNotaReposicao(itensNotaPendente, "manual");
+      setNotasReposicao(await listarNotasReposicao());
       setPaginaNotas(1);
       setNotaGerada(nota);
       setItensNotaPendente(null);
@@ -231,17 +256,17 @@ export default function Administrador({
     setErro("");
   }
 
-  function confirmarEdicaoFuncionario(e: FormEvent<HTMLFormElement>) {
+  async function confirmarEdicaoFuncionario(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!funcionarioEditando) return;
 
     try {
-      atualizarFuncionario(funcionarioEditando.id, {
+      await atualizarFuncionario(funcionarioEditando.id, {
         nome: edicaoNome,
         usuario: edicaoUsuario,
         senha: edicaoSenha,
       });
-      setFuncionarios(listarFuncionarios().filter((f) => f.perfil === "funcionario"));
+      setFuncionarios((await listarFuncionarios()).filter((f) => f.perfil === "funcionario"));
       setFuncionarioEditando(null);
       setMensagem("Funcionário atualizado com sucesso.");
       setErro("");
@@ -250,11 +275,16 @@ export default function Administrador({
     }
   }
 
-  function confirmarExclusaoFuncionario() {
+  async function confirmarExclusaoFuncionario() {
     if (!confirmarExclusao) return;
-    excluirFuncionario(confirmarExclusao.id);
-    setFuncionarios(listarFuncionarios().filter((f) => f.perfil === "funcionario"));
-    setConfirmarExclusao(null);
+    try {
+      await excluirFuncionario(confirmarExclusao.id);
+      setFuncionarios((await listarFuncionarios()).filter((f) => f.perfil === "funcionario"));
+      setConfirmarExclusao(null);
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : "Não foi possível excluir o funcionário.");
+      setConfirmarExclusao(null);
+    }
   }
 
   return (
@@ -268,7 +298,12 @@ export default function Administrador({
             <h1>Administração do almoxarifado</h1>
             <p>Bem-vindo(a), <strong>{funcionario.nome}</strong>.</p>
           </div>
-          <Botao variante="secundario" onClick={onVoltar}>Voltar ao painel</Botao>
+          <div className="nota-acoes">
+            <Botao variante="secundario" onClick={() => setVersaoCargaDados((v) => v + 1)}>
+              Atualizar dados
+            </Botao>
+            <Botao variante="secundario" onClick={onVoltar}>Voltar ao painel</Botao>
+          </div>
         </div>
 
         {/* Destaque de estoque baixo e nota com todos os produtos em falta. */}
@@ -558,7 +593,7 @@ export default function Administrador({
             </div>
             <div className="campo-login">
               <label htmlFor="senha-funcionario">Senha</label>
-              <input id="senha-funcionario" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="new-password" required />
+              <input id="senha-funcionario" type="password" minLength={6} value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="new-password" required />
             </div>
             {erro && !funcionarioEditando && <p className="mensagem-erro" role="alert">{erro}</p>}
             {mensagem && <p className="mensagem-sucesso" role="status">{mensagem}</p>}
@@ -593,7 +628,7 @@ export default function Administrador({
               <form className="formulario-admin" onSubmit={confirmarEdicaoFuncionario}>
                 <label>Nome completo<input className="campo" value={edicaoNome} onChange={(e) => setEdicaoNome(e.target.value)} required /></label>
                 <label>Usuário<input className="campo" value={edicaoUsuario} onChange={(e) => setEdicaoUsuario(e.target.value)} required /></label>
-                <label>Nova senha (opcional)<input className="campo" type="password" value={edicaoSenha} onChange={(e) => setEdicaoSenha(e.target.value)} placeholder="Deixe vazio para manter" /></label>
+                <label>Nova senha (opcional)<input className="campo" type="password" minLength={6} value={edicaoSenha} onChange={(e) => setEdicaoSenha(e.target.value)} placeholder="Deixe vazio para manter" /></label>
                 {erro && <p className="mensagem-erro" role="alert">{erro}</p>}
                 <div className="nota-acoes">
                   <Botao type="submit">Salvar alterações</Botao>
@@ -625,7 +660,7 @@ export default function Administrador({
           ) : (
             <div className="tabela-responsiva">
               <table className="tabela-admin">
-                <thead><tr><th>Data e hora</th><th>Produto</th><th>Operação</th><th>Quantidade movimentada</th><th>Funcionário responsável</th></tr></thead>
+                <thead><tr><th>Data e hora</th><th>Produto</th><th>Operação</th><th>Quantidade movimentada</th><th>Funcionário responsável</th><th>Projeto de destino</th></tr></thead>
                 <tbody>
                   {movimentacoes.map((registro) => (
                     <tr key={registro.id}>
@@ -634,6 +669,7 @@ export default function Administrador({
                       <td><span className={registro.operacao === "inserir" ? "etiqueta-entrada" : "etiqueta-retirada"}>{registro.operacao === "inserir" ? "Entrada" : "Retirada"}</span></td>
                       <td>{registro.quantidade}</td>
                       <td>{registro.funcionarioNome}</td>
+                      {/* <td>{registro.projetoDestino || "—"}</td> */}
                     </tr>
                   ))}
                 </tbody>

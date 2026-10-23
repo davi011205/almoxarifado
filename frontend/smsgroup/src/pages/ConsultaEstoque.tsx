@@ -1,8 +1,8 @@
+import { useCallback, useState } from "react";
 import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
-import type { ConsultaEstoqueProps } from "../types";
-import { useCallback, useState } from "react";
 import LeitorQR from "../components/ui/LeitorQR";
+import type { ConsultaEstoqueProps } from "../types";
 import { obterQuantidadeMinima } from "../services/reposicaoService";
 
 const ITENS_POR_PAGINA = 20;

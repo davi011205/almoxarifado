@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Header from "../components/layout/Header/Header";
 import Botao from "../components/ui/Botao";
 import type { ConsultaEstoqueProps } from "../types";
